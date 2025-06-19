@@ -1,0 +1,10 @@
+[
+  {
+    "name": "bev",
+    "value": "xxxxxx",
+    "domain": ".airbnb.com",
+    "path": "/",
+    "httpOnly": true,
+    "secure": true
+  }
+]
