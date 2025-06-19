@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "Airbnb_bot",
   "scripts": {
-    "start": "node Airbn"b_bot
+   " start": "node Airbnb_bot"t
   },
   "dependencies": {
     "express": "^4.18.2",
