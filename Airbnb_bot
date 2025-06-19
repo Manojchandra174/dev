@@ -1,28 +1,42 @@
 const express = require('express');
-const puppeteer = require('puppeteer-core');
+const chromium = require('chrome-aws-lambda');
 const fs = require('fs');
 
 const app = express();
 
 app.get('/inbox', async (req, res) => {
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
+  let browser = null;
 
-  const cookies = JSON.parse(fs.readFileSync('./cookies.json'));
-  await page.setCookie(...cookies);
+  try {
+    browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless
+    });
 
-  await page.goto('https://www.airbnb.com/inbox', { waitUntil: 'networkidle2' });
+    const page = await browser.newPage();
 
-  const messages = await page.evaluate(() => {
-    return [...document.querySelectorAll('[data-testid="inbox-thread-card"]')].map(card => ({
-      guest: card.querySelector('h3')?.innerText,
-      message: card.querySelector('p')?.innerText,
-      time: card.querySelector('time')?.innerText,
-    }));
-  });
+    const cookies = JSON.parse(fs.readFileSync('./cookies.json'));
+    await page.setCookie(...cookies);
 
-  await browser.close();
-  res.json(messages);
+    await page.goto('https://www.airbnb.com/inbox', { waitUntil: 'networkidle2' });
+
+    const messages = await page.evaluate(() => {
+      return [...document.querySelectorAll('[data-testid="inbox-thread-card"]')].map(card => ({
+        guest: card.querySelector('h3')?.innerText,
+        message: card.querySelector('p')?.innerText,
+        time: card.querySelector('time')?.innerText,
+      }));
+    });
+
+    res.json(messages);
+  } catch (err) {
+    console.error('❌ Error:', err);
+    res.status(500).send('Something went wrong');
+  } finally {
+    if (browser !== null) await browser.close();
+  }
 });
 
-app.listen(3000, () => console.log('Bot running on port 3000'));
+app.listen(3000, () => console.log('✅ Bot running on port 3000'));
